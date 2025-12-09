@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Solana Wallet Adapter Styles */
+.wallet-adapter-button {
+    background-color: #4f46e5 !important;
+    height: 48px !important;
+}
+
+.wallet-adapter-button:hover {
+    background-color: #4338ca !important;
+}
+
