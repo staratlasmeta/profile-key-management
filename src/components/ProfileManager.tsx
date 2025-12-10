@@ -130,12 +130,7 @@ export const ProfileManager = () => {
                 return;
             }
 
-            console.log("Program exists, checking for accounts...");
-
-            const allAccounts = await connection.getProgramAccounts(new PublicKey(programId), {
-                commitment: 'confirmed'
-            });
-            console.log("Total accounts owned by program:", allAccounts.length);
+            console.log("Program exists, fetching profiles for wallet:", wallet.publicKey.toBase58());
 
             const results = await readAllFromRPC(
                 connection,
@@ -157,10 +152,10 @@ export const ProfileManager = () => {
                 .map((r) => (r as any).data as PlayerProfile);
 
             console.log("Found matching profiles:", myProfiles.length);
-            setDebugInfo(`Found ${myProfiles.length} profiles. Program has ${allAccounts.length} total accounts.`);
+            setDebugInfo(`Found ${myProfiles.length} profiles owned by your wallet.`);
 
-            if (myProfiles.length === 0 && allAccounts.length > 0) {
-                setDebugInfo(`Found ${myProfiles.length} profiles. Program has ${allAccounts.length} total accounts. The offset calculation might be wrong or your wallet is not an auth key on any profiles.`);
+            if (myProfiles.length === 0) {
+                setDebugInfo(`No profiles found. Your wallet is not an auth key on any profiles for this program.`);
             }
 
             setProfiles(myProfiles);
@@ -299,10 +294,10 @@ export const ProfileManager = () => {
 
     // Get timer color based on remaining time
     const getTimerColor = (seconds: number | null) => {
-        if (seconds === null) return 'text-gray-400';
+        if (seconds === null) return 'text-[var(--sa-text-dim)]';
         if (seconds <= 15) return 'text-red-400';
         if (seconds <= 30) return 'text-amber-400';
-        return 'text-green-400';
+        return 'text-emerald-400';
     };
 
     const handleSignWithCurrentWallet = async () => {
@@ -480,11 +475,38 @@ export const ProfileManager = () => {
     const showConnectWalletMessage = !wallet.connected && !isTransferInProgress;
 
     if (showConnectWalletMessage) {
-        return <div className="text-center text-gray-500 mt-10">Please connect your wallet to manage profiles.</div>;
+        return (
+            <div className="container mx-auto px-6 py-20 text-center">
+                <div className="sage-card p-12 max-w-md mx-auto">
+                    <div className="w-16 h-16 mx-auto mb-6 border border-[var(--sa-border-light)] flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-[var(--sa-text-dim)]">
+                            <path fillRule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.5 9.75c0 5.992 3.043 11.294 7.923 14.07a.75.75 0 00.755 0C16.057 21.045 19.1 15.742 19.1 9.75c0-1.408-.255-2.766-.722-4.045a.75.75 0 00-.722-.515 11.208 11.208 0 01-7.877-3.08z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                    <h2 className="font-mono text-lg font-bold tracking-wider mb-3 text-[var(--sa-text)]">WALLET REQUIRED</h2>
+                    <p className="font-mono text-xs text-[var(--sa-text-dim)] tracking-wide mb-6">
+                        Connect your wallet to manage player profiles
+                    </p>
+                    <div className="h-[1px] bg-gradient-to-r from-transparent via-[var(--sa-border-light)] to-transparent mb-6"></div>
+                    <p className="text-[var(--sa-text-dim)] text-sm">
+                        Use the wallet button in the header to connect.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     if (loading && !isTransferInProgress) {
-        return <div className="text-center mt-10 text-gray-300">Loading profiles...</div>;
+        return (
+            <div className="container mx-auto px-6 py-20 text-center">
+                <div className="sage-card p-12 max-w-md mx-auto">
+                    <div className="w-12 h-12 mx-auto mb-6 border border-[var(--sa-accent)] flex items-center justify-center animate-pulse">
+                        <div className="w-4 h-4 bg-[var(--sa-accent)]"></div>
+                    </div>
+                    <h2 className="font-mono text-sm font-bold tracking-wider text-[var(--sa-text-dim)]">LOADING PROFILES...</h2>
+                </div>
+            </div>
+        );
     }
 
     const renderTransferModalContent = () => {
@@ -492,44 +514,78 @@ export const ProfileManager = () => {
             case 'enter_destination':
                 return (
                     <>
-                        <h3 className="text-xl font-bold text-white mb-4">Transfer Authority - Step 1 of 3</h3>
-                        <div className="bg-amber-900/30 border border-amber-700/50 rounded-lg p-4 mb-6">
-                            <p className="text-amber-200 text-sm">
-                                <strong className="font-bold">Important:</strong> You must own both wallets. The current auth key and the destination key must both sign this transaction.
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold tracking-wider">0001.</span>
+                            <h3 className="font-mono text-lg font-bold tracking-wider text-[var(--sa-text)]">TRANSFER AUTHORITY</h3>
+                        </div>
+                        
+                        {/* Step Progress Indicator */}
+                        <div className="flex items-center gap-2 mb-6 p-3 bg-[var(--sa-black)] border border-[var(--sa-border)]">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-[var(--sa-accent)] bg-[rgb(var(--sa-accent-rgb-space))]/20 flex items-center justify-center">
+                                    <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold">1</span>
+                                </div>
+                                <span className="font-mono text-[10px] text-[var(--sa-accent)] uppercase tracking-wider">Setup</span>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-[var(--sa-border)]"></div>
+                            <div className="flex items-center gap-2 opacity-40">
+                                <div className="w-6 h-6 border border-[var(--sa-border)] flex items-center justify-center">
+                                    <span className="font-mono text-[10px] text-[var(--sa-text-dim)] font-bold">2</span>
+                                </div>
+                                <span className="font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider">Sign</span>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-[var(--sa-border)] opacity-40"></div>
+                            <div className="flex items-center gap-2 opacity-40">
+                                <div className="w-6 h-6 border border-[var(--sa-border)] flex items-center justify-center">
+                                    <span className="font-mono text-[10px] text-[var(--sa-text-dim)] font-bold">3</span>
+                                </div>
+                                <span className="font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider">Complete</span>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 mb-6">
+                            <p className="font-mono text-xs text-amber-300 tracking-wide">
+                                <strong className="font-bold">⚠ IMPORTANT:</strong> You must own both wallets. The current auth key and the destination key must both sign this transaction.
                             </p>
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Current Auth Key</label>
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-gray-400 font-mono text-sm break-all">
+                            <label className="block font-mono text-[10px] text-emerald-400 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-emerald-400"></span>
+                                Connected — Current Auth Key
+                            </label>
+                            <div className="sage-input bg-[var(--sa-dark)] border-emerald-500/30 text-emerald-400 break-all">
                                 {transferState.originalAuthPubkey}
                             </div>
                         </div>
                         <div className="mb-6">
-                            <label className="block text-gray-400 text-xs uppercase font-bold mb-2">New Auth Public Key (Destination)</label>
+                            <label className="block font-mono text-[10px] text-[var(--sa-accent)] uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-[var(--sa-accent)] animate-pulse"></span>
+                                Enter — New Auth Public Key (Destination)
+                            </label>
                             <input 
                                 type="text" 
                                 value={transferState.destinationPubkey}
                                 onChange={(e) => setTransferState(prev => ({ ...prev, destinationPubkey: e.target.value, error: null }))}
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono text-sm"
+                                className="sage-input ring-2 ring-[rgb(var(--sa-accent-rgb-space))]/30"
                                 placeholder="Enter destination Solana address..."
                             />
                         </div>
                         {transferState.error && (
-                            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4">
-                                <p className="text-red-300 text-sm">{transferState.error}</p>
+                            <div className="bg-red-500/10 border border-red-500/30 p-3 mb-4">
+                                <p className="font-mono text-xs text-red-400">{transferState.error}</p>
                             </div>
                         )}
                         <div className="flex justify-end gap-3">
                             <button 
                                 onClick={closeTransferModal}
-                                className="px-4 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                                className="sage-button-secondary px-5 py-2.5"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleDestinationSubmit}
                                 disabled={!transferState.destinationPubkey.trim()}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold transition-all"
+                                className="sage-button disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Continue
                             </button>
@@ -540,38 +596,67 @@ export const ProfileManager = () => {
             case 'sign_current':
                 return (
                     <>
-                        <h3 className="text-xl font-bold text-white mb-4">Transfer Authority - Step 2 of 3</h3>
-                        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
-                            <p className="text-blue-200 text-sm">
-                                Sign with your <strong>current auth wallet</strong> to authorize the transfer.
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold tracking-wider">0002.</span>
+                            <h3 className="font-mono text-lg font-bold tracking-wider text-[var(--sa-text)]">SIGN TRANSACTION</h3>
+                        </div>
+                        
+                        {/* Step Progress Indicator */}
+                        <div className="flex items-center gap-2 mb-6 p-3 bg-[var(--sa-black)] border border-[var(--sa-border)]">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center">
+                                    <span className="font-mono text-[10px] text-amber-400 font-bold">1</span>
+                                </div>
+                                <span className="font-mono text-[10px] text-amber-400 uppercase tracking-wider">Sign Current</span>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-[var(--sa-border)]"></div>
+                            <div className="flex items-center gap-2 opacity-40">
+                                <div className="w-6 h-6 border border-[var(--sa-border)] flex items-center justify-center">
+                                    <span className="font-mono text-[10px] text-[var(--sa-text-dim)] font-bold">2</span>
+                                </div>
+                                <span className="font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider">Sign Dest</span>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 mb-6">
+                            <p className="font-mono text-xs text-amber-300 tracking-wide">
+                                <strong>→ ACTION REQUIRED:</strong> Sign with your <strong>current auth wallet</strong> to authorize the transfer.
                             </p>
                         </div>
                         <div className="space-y-3 mb-6">
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">From (Current Auth)</label>
-                                <div className="bg-gray-900 border border-green-700/50 rounded-lg p-3 text-green-400 font-mono text-sm break-all">
-                                    ✓ {transferState.originalAuthPubkey}
+                                <label className="block font-mono text-[10px] text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-amber-400 animate-pulse"></span>
+                                    SIGN NOW — Current Auth Key
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-amber-500/50 text-amber-300 break-all ring-2 ring-amber-500/30">
+                                    {transferState.originalAuthPubkey}
                                 </div>
                             </div>
-                            <div className="flex justify-center">
-                                <span className="text-gray-500">↓</span>
+                            <div className="flex justify-center py-2">
+                                <svg className="w-5 h-5 text-[var(--sa-text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
                             </div>
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">To (New Auth)</label>
-                                <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-gray-300 font-mono text-sm break-all">
+                                <label className="block font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-[var(--sa-border)]"></span>
+                                    PENDING — New Auth Key
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] text-[var(--sa-text-dim)] break-all opacity-60">
                                     {transferState.destinationPubkey}
                                 </div>
                             </div>
                         </div>
                         {transferState.error && (
-                            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4">
-                                <p className="text-red-300 text-sm">{transferState.error}</p>
+                            <div className="bg-red-500/10 border border-red-500/30 p-3 mb-4">
+                                <p className="font-mono text-xs text-red-400">{transferState.error}</p>
                             </div>
                         )}
                         <div className="flex justify-end gap-3">
                             <button 
                                 onClick={() => setTransferState(prev => ({ ...prev, step: 'enter_destination', error: null }))}
-                                className="px-4 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                                className="sage-button-secondary px-5 py-2.5"
                                 disabled={processing}
                             >
                                 Back
@@ -579,9 +664,9 @@ export const ProfileManager = () => {
                             <button 
                                 onClick={handleSignWithCurrentWallet}
                                 disabled={processing}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold transition-all"
+                                className="sage-button disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {processing ? 'Signing...' : 'Sign with Current Wallet'}
+                                {processing ? 'SIGNING...' : 'SIGN WITH CURRENT WALLET'}
                             </button>
                         </div>
                     </>
@@ -594,14 +679,17 @@ export const ProfileManager = () => {
 
                 return (
                     <>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-white">Transfer Authority - Step 3 of 3</h3>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold tracking-wider">0003.</span>
+                                <h3 className="font-mono text-lg font-bold tracking-wider text-[var(--sa-text)]">CONNECT DESTINATION</h3>
+                            </div>
                             {/* Countdown Timer */}
                             {timeRemaining !== null && (
-                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-                                    timeRemaining <= 15 ? 'bg-red-900/30 border border-red-700' :
-                                    timeRemaining <= 30 ? 'bg-amber-900/30 border border-amber-700' :
-                                    'bg-gray-900 border border-gray-700'
+                                <div className={`flex items-center gap-2 px-3 py-1.5 border ${
+                                    timeRemaining <= 15 ? 'bg-red-500/10 border-red-500/30' :
+                                    timeRemaining <= 30 ? 'bg-amber-500/10 border-amber-500/30' :
+                                    'bg-[var(--sa-dark)] border-[var(--sa-border)]'
                                 }`}>
                                     <svg className={`w-4 h-4 ${getTimerColor(timeRemaining)}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -613,80 +701,115 @@ export const ProfileManager = () => {
                             )}
                         </div>
                         
+                        {/* Step Progress Indicator */}
+                        <div className="flex items-center gap-2 mb-6 p-3 bg-[var(--sa-black)] border border-[var(--sa-border)]">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span className="font-mono text-[10px] text-emerald-400 uppercase tracking-wider">Signed</span>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-emerald-500/30"></div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center animate-pulse">
+                                    <span className="font-mono text-[10px] text-amber-400 font-bold">2</span>
+                                </div>
+                                <span className="font-mono text-[10px] text-amber-400 uppercase tracking-wider">Connect & Sign</span>
+                            </div>
+                        </div>
+                        
                         {/* Success checkmark for first signature */}
-                        <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4 mb-4">
-                            <div className="flex items-center gap-2 text-green-400">
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 mb-4">
+                            <div className="flex items-center gap-2 text-emerald-400">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span className="text-sm font-medium">First signature complete!</span>
+                                <span className="font-mono text-xs font-bold tracking-wider">FIRST SIGNATURE COMPLETE</span>
                             </div>
                         </div>
 
                         {/* Time warning */}
                         {timeRemaining !== null && timeRemaining <= 30 && (
-                            <div className={`${timeRemaining <= 15 ? 'bg-red-900/30 border-red-700' : 'bg-amber-900/30 border-amber-700'} border rounded-lg p-3 mb-4`}>
-                                <p className={`text-sm ${timeRemaining <= 15 ? 'text-red-200' : 'text-amber-200'}`}>
-                                    <strong>⚠️ {timeRemaining <= 15 ? 'Hurry!' : 'Time running low!'}</strong> Complete the second signature within {formatTimeRemaining(timeRemaining)} or you'll need to restart.
+                            <div className={`${timeRemaining <= 15 ? 'bg-red-500/10 border-red-500/30' : 'bg-amber-500/10 border-amber-500/30'} border p-3 mb-4`}>
+                                <p className={`font-mono text-xs ${timeRemaining <= 15 ? 'text-red-400' : 'text-amber-400'}`}>
+                                    <strong>⚠ {timeRemaining <= 15 ? 'HURRY!' : 'TIME RUNNING LOW!'}</strong> Complete within {formatTimeRemaining(timeRemaining)}
                                 </p>
                             </div>
                         )}
 
-                        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
-                            <p className="text-blue-200 text-sm">
-                                Now connect the <strong>destination wallet</strong> to add the second signature and complete the transfer.
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 mb-6">
+                            <p className="font-mono text-xs text-amber-300 tracking-wide">
+                                <strong>→ ACTION REQUIRED:</strong> Connect the <strong>destination wallet</strong> to add the second signature.
                             </p>
                         </div>
 
                         <div className="space-y-3 mb-6">
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">✓ Signed by original auth</label>
-                                <div className="bg-gray-900 border border-green-700/50 rounded-lg p-2 text-green-400 font-mono text-xs break-all">
+                                <label className="block font-mono text-[10px] text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    SIGNED — Original Auth Key
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-emerald-500/50 text-emerald-400 text-xs break-all py-2">
                                     {transferState.originalAuthPubkey}
                                 </div>
                             </div>
+                            <div className="flex justify-center py-1">
+                                <svg className="w-5 h-5 text-[var(--sa-text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
+                            </div>
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">⏳ Awaiting signature from</label>
-                                <div className="bg-gray-900 border border-amber-700/50 rounded-lg p-2 text-amber-400 font-mono text-xs break-all">
+                                <label className="block font-mono text-[10px] text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-amber-400 animate-pulse"></span>
+                                    AWAITING — Destination Wallet
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-amber-500/50 text-amber-300 text-xs break-all py-2 ring-2 ring-amber-500/30">
                                     {transferState.destinationPubkey}
                                 </div>
                             </div>
                         </div>
 
                         {/* Current wallet status */}
-                        <div className="mb-4 p-3 bg-gray-900/50 rounded-lg border border-gray-700">
-                            <p className="text-gray-500 text-xs uppercase mb-2">Current Connection Status</p>
+                        <div className="mb-4 p-3 bg-[var(--sa-dark)] border border-[var(--sa-border)]">
+                            <p className="font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider mb-2">Current Connection</p>
                             {isWalletConnected ? (
                                 <div className="flex items-center justify-between">
-                                    <p className={`font-mono text-sm break-all ${isCorrectWallet ? 'text-green-400' : 'text-amber-400'}`}>
-                                        {wallet.publicKey?.toBase58()}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`w-2 h-2 ${isCorrectWallet ? 'bg-emerald-400' : isOriginalWallet ? 'bg-amber-400' : 'bg-red-400'}`}></span>
+                                        <p className={`font-mono text-xs break-all ${isCorrectWallet ? 'text-emerald-400' : isOriginalWallet ? 'text-amber-400' : 'text-red-400'}`}>
+                                            {wallet.publicKey?.toBase58()}
+                                        </p>
+                                    </div>
                                     {isCorrectWallet && (
-                                        <span className="ml-2 text-xs bg-green-900 text-green-200 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                            Ready!
+                                        <span className="ml-2 font-mono text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 border border-emerald-500/30 whitespace-nowrap">
+                                            READY
                                         </span>
                                     )}
                                     {isOriginalWallet && (
-                                        <span className="ml-2 text-xs bg-amber-900 text-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                            Original
+                                        <span className="ml-2 font-mono text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 border border-amber-500/30 whitespace-nowrap">
+                                            ORIGINAL
                                         </span>
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-gray-500 text-sm">No wallet connected</p>
+                                <p className="font-mono text-xs text-[var(--sa-text-dim)]">No wallet connected</p>
                             )}
                         </div>
 
                         {transferState.error && (
-                            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4">
-                                <p className="text-red-300 text-sm">{transferState.error}</p>
+                            <div className="bg-red-500/10 border border-red-500/30 p-3 mb-4">
+                                <p className="font-mono text-xs text-red-400">{transferState.error}</p>
                             </div>
                         )}
 
                         <div className="flex justify-between gap-3">
                             <button 
                                 onClick={closeTransferModal}
-                                className="px-4 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                                className="sage-button-secondary px-5 py-2.5"
                             >
                                 Cancel
                             </button>
@@ -694,25 +817,25 @@ export const ProfileManager = () => {
                                 {isWalletConnected && !isCorrectWallet && (
                                     <button 
                                         onClick={handleDisconnectAndReconnect}
-                                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm font-semibold transition-all"
+                                        className="sage-button-secondary px-5 py-2.5"
                                     >
-                                        Switch Wallet
+                                        SWITCH WALLET
                                     </button>
                                 )}
                                 {!isWalletConnected && (
                                     <button 
                                         onClick={handleOpenWalletModal}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold transition-all"
+                                        className="sage-button"
                                     >
-                                        Connect Wallet
+                                        CONNECT WALLET
                                     </button>
                                 )}
                                 {isCorrectWallet && (
                                     <button 
                                         onClick={() => setTransferState(prev => ({ ...prev, step: 'sign_destination' }))}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold transition-all"
+                                        className="sage-button !bg-emerald-500 !border-emerald-500 hover:!bg-emerald-400"
                                     >
-                                        Continue to Sign
+                                        CONTINUE TO SIGN
                                     </button>
                                 )}
                             </div>
@@ -723,14 +846,17 @@ export const ProfileManager = () => {
             case 'sign_destination':
                 return (
                     <>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-white">Transfer Authority - Final Step</h3>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <span className="font-mono text-[10px] text-emerald-400 font-bold tracking-wider">FINAL</span>
+                                <h3 className="font-mono text-lg font-bold tracking-wider text-[var(--sa-text)]">COMPLETE TRANSFER</h3>
+                            </div>
                             {/* Countdown Timer */}
                             {timeRemaining !== null && (
-                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-                                    timeRemaining <= 15 ? 'bg-red-900/30 border border-red-700' :
-                                    timeRemaining <= 30 ? 'bg-amber-900/30 border border-amber-700' :
-                                    'bg-gray-900 border border-gray-700'
+                                <div className={`flex items-center gap-2 px-3 py-1.5 border ${
+                                    timeRemaining <= 15 ? 'bg-red-500/10 border-red-500/30' :
+                                    timeRemaining <= 30 ? 'bg-amber-500/10 border-amber-500/30' :
+                                    'bg-[var(--sa-dark)] border-[var(--sa-border)]'
                                 }`}>
                                     <svg className={`w-4 h-4 ${getTimerColor(timeRemaining)}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -741,44 +867,85 @@ export const ProfileManager = () => {
                                 </div>
                             )}
                         </div>
+                        
+                        {/* Step Progress Indicator - Both steps complete! */}
+                        <div className="flex items-center gap-2 mb-6 p-3 bg-[var(--sa-black)] border border-emerald-500/30">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span className="font-mono text-[10px] text-emerald-400 uppercase tracking-wider">Signed</span>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-emerald-500/50"></div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span className="font-mono text-[10px] text-emerald-400 uppercase tracking-wider">Connected</span>
+                            </div>
+                        </div>
 
                         {/* Time warning */}
                         {timeRemaining !== null && timeRemaining <= 30 && (
-                            <div className={`${timeRemaining <= 15 ? 'bg-red-900/30 border-red-700' : 'bg-amber-900/30 border-amber-700'} border rounded-lg p-3 mb-4`}>
-                                <p className={`text-sm ${timeRemaining <= 15 ? 'text-red-200' : 'text-amber-200'}`}>
-                                    <strong>⚠️ {timeRemaining <= 15 ? 'Hurry!' : 'Time running low!'}</strong> Sign now - only {formatTimeRemaining(timeRemaining)} remaining!
+                            <div className={`${timeRemaining <= 15 ? 'bg-red-500/10 border-red-500/30' : 'bg-amber-500/10 border-amber-500/30'} border p-3 mb-4`}>
+                                <p className={`font-mono text-xs ${timeRemaining <= 15 ? 'text-red-400' : 'text-amber-400'}`}>
+                                    <strong>⚠ {timeRemaining <= 15 ? 'HURRY!' : 'TIME RUNNING LOW!'}</strong> Sign now - only {formatTimeRemaining(timeRemaining)} remaining!
                                 </p>
                             </div>
                         )}
 
-                        <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 mb-6">
-                            <p className="text-green-200 text-sm">
-                                <strong>Destination wallet connected!</strong> Sign to complete the authority transfer.
-                            </p>
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 mb-6">
+                            <div className="flex items-center gap-2 text-emerald-400">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <p className="font-mono text-xs tracking-wide">
+                                    <strong>DESTINATION WALLET CONNECTED!</strong> Sign to complete the authority transfer.
+                                </p>
+                            </div>
                         </div>
                         <div className="space-y-3 mb-6">
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">✓ Signed by original auth</label>
-                                <div className="bg-gray-900 border border-green-700/50 rounded-lg p-2 text-green-400 font-mono text-xs break-all">
+                                <label className="block font-mono text-[10px] text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    SIGNED — Original Auth Key
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-emerald-500/50 text-emerald-400 text-xs break-all py-2">
                                     {transferState.originalAuthPubkey}
                                 </div>
                             </div>
+                            <div className="flex justify-center py-1">
+                                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
+                            </div>
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">✓ Ready to sign with destination</label>
-                                <div className="bg-gray-900 border border-green-700/50 rounded-lg p-2 text-green-400 font-mono text-xs break-all">
+                                <label className="block font-mono text-[10px] text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    CONNECTED — Ready to Sign
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-emerald-500/50 text-emerald-400 text-xs break-all py-2 ring-2 ring-emerald-500/30">
                                     {transferState.destinationPubkey}
                                 </div>
                             </div>
                         </div>
                         {transferState.error && (
-                            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4">
-                                <p className="text-red-300 text-sm">{transferState.error}</p>
+                            <div className="bg-red-500/10 border border-red-500/30 p-3 mb-4">
+                                <p className="font-mono text-xs text-red-400">{transferState.error}</p>
                             </div>
                         )}
                         <div className="flex justify-end gap-3">
                             <button 
                                 onClick={closeTransferModal}
-                                className="px-4 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                                className="sage-button-secondary px-5 py-2.5"
                                 disabled={processing}
                             >
                                 Cancel
@@ -786,9 +953,9 @@ export const ProfileManager = () => {
                             <button 
                                 onClick={handleSignWithDestinationWallet}
                                 disabled={processing}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold transition-all"
+                                className="sage-button !bg-emerald-500 !border-emerald-500 hover:!bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {processing ? 'Processing...' : 'Sign & Complete Transfer'}
+                                {processing ? 'PROCESSING...' : 'SIGN & COMPLETE TRANSFER'}
                             </button>
                         </div>
                     </>
@@ -797,32 +964,87 @@ export const ProfileManager = () => {
             case 'complete':
                 return (
                     <>
-                        <h3 className="text-xl font-bold text-white mb-4">Transfer Complete! 🎉</h3>
-                        <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 mb-6">
-                            <p className="text-green-200 text-sm">
-                                Authority has been successfully transferred to the new wallet.
-                            </p>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-8 h-8 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="font-mono text-lg font-bold tracking-wider text-emerald-400">TRANSFER COMPLETE</h3>
+                        </div>
+                        
+                        {/* All Steps Complete */}
+                        <div className="flex items-center gap-2 mb-6 p-3 bg-emerald-500/10 border border-emerald-500/30">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-emerald-500/50"></div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-emerald-500/50"></div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 mb-6">
+                            <div className="flex items-center gap-2 text-emerald-400">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="font-mono text-xs tracking-wide">
+                                    Authority has been successfully transferred to the new wallet.
+                                </p>
+                            </div>
                         </div>
                         <div className="space-y-3 mb-6">
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">Previous Auth (removed)</label>
-                                <div className="bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-500 font-mono text-xs break-all line-through">
+                                <label className="block font-mono text-[10px] text-red-400/70 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    REMOVED — Previous Auth Key
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-red-500/20 text-red-400/50 text-xs break-all py-2 line-through">
                                     {transferState.originalAuthPubkey}
                                 </div>
                             </div>
+                            <div className="flex justify-center py-1">
+                                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
+                            </div>
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">New Auth (active)</label>
-                                <div className="bg-gray-900 border border-green-700/50 rounded-lg p-2 text-green-400 font-mono text-xs break-all">
-                                    ✓ {transferState.destinationPubkey}
+                                <label className="block font-mono text-[10px] text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    ACTIVE — New Auth Key
+                                </label>
+                                <div className="sage-input bg-[var(--sa-dark)] border-emerald-500/50 text-emerald-400 text-xs break-all py-2 ring-2 ring-emerald-500/30">
+                                    {transferState.destinationPubkey}
                                 </div>
                             </div>
                         </div>
                         <div className="flex justify-end">
                             <button 
                                 onClick={closeTransferModal}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold transition-all"
+                                className="sage-button !bg-emerald-500 !border-emerald-500 hover:!bg-emerald-400"
                             >
-                                Done
+                                DONE
                             </button>
                         </div>
                     </>
@@ -831,27 +1053,66 @@ export const ProfileManager = () => {
             case 'expired':
                 return (
                     <>
-                        <h3 className="text-xl font-bold text-white mb-4">Transaction Expired ⏰</h3>
-                        <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 mb-6">
-                            <p className="text-red-200 text-sm">
-                                The transaction blockhash has expired. Solana transactions are only valid for approximately 90 seconds after the blockhash is obtained.
-                            </p>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-8 h-8 border-2 border-red-500 bg-red-500/20 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-mono text-lg font-bold tracking-wider text-red-400">TRANSACTION EXPIRED</h3>
                         </div>
-                        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 mb-6">
-                            <p className="text-gray-300 text-sm">
-                                Don't worry - no changes were made to your profile. You can restart the transfer process to try again.
-                            </p>
+                        
+                        {/* Failed Progress Indicator */}
+                        <div className="flex items-center gap-2 mb-6 p-3 bg-[var(--sa-black)] border border-red-500/30">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span className="font-mono text-[10px] text-emerald-400 uppercase tracking-wider">Signed</span>
+                            </div>
+                            <div className="flex-1 h-[1px] bg-red-500/30"></div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-red-500 bg-red-500/20 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                                <span className="font-mono text-[10px] text-red-400 uppercase tracking-wider">Expired</span>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-red-500/10 border border-red-500/30 p-4 mb-4">
+                            <div className="flex items-center gap-2 text-red-400">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <p className="font-mono text-xs tracking-wide">
+                                    The transaction blockhash has expired. Solana transactions are only valid for approximately 90 seconds.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-[var(--sa-dark)] border border-[var(--sa-border)] p-4 mb-6">
+                            <div className="flex items-center gap-2 text-[var(--sa-text-dim)]">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="font-mono text-xs tracking-wide">
+                                    Don't worry - no changes were made to your profile. You can restart the transfer process.
+                                </p>
+                            </div>
                         </div>
                         <div className="space-y-3 mb-6">
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">From (Current Auth)</label>
-                                <div className="bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-400 font-mono text-xs break-all">
+                                <label className="block font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider mb-1">From (Current Auth)</label>
+                                <div className="sage-input bg-[var(--sa-dark)] text-[var(--sa-text-dim)] text-xs break-all py-2 opacity-60">
                                     {transferState.originalAuthPubkey}
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-gray-500 text-xs uppercase mb-1">To (Destination)</label>
-                                <div className="bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-400 font-mono text-xs break-all">
+                                <label className="block font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider mb-1">To (Destination)</label>
+                                <div className="sage-input bg-[var(--sa-dark)] text-[var(--sa-text-dim)] text-xs break-all py-2 opacity-60">
                                     {transferState.destinationPubkey}
                                 </div>
                             </div>
@@ -859,15 +1120,15 @@ export const ProfileManager = () => {
                         <div className="flex justify-between gap-3">
                             <button 
                                 onClick={closeTransferModal}
-                                className="px-4 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                                className="sage-button-secondary px-5 py-2.5"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleRestartTransfer}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold transition-all"
+                                className="sage-button"
                             >
-                                Restart Transfer
+                                RESTART TRANSFER
                             </button>
                         </div>
                     </>
@@ -879,150 +1140,196 @@ export const ProfileManager = () => {
     };
 
     return (
-        <div className="container mx-auto p-4">
-            <h2 className="text-2xl font-bold mb-6 text-white">My Player Profiles</h2>
+        <div className="container mx-auto px-6">
+            {/* Section Header */}
+            <div className="section-header">
+                <span className="section-number">0001.</span>
+                <h2 className="section-title">MY PLAYER PROFILES</h2>
+                <div className="section-line"></div>
+            </div>
 
             {/* Show transfer in progress banner if disconnected during transfer */}
             {isTransferInProgress && !wallet.connected && (
-                <div className="bg-amber-900/30 border border-amber-700 rounded-lg p-4 mb-6">
+                <div className="sage-card bg-amber-500/10 border-amber-500/30 p-4 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-amber-200 font-semibold">Transfer in Progress</p>
-                            <p className="text-amber-300/70 text-sm">Connect the destination wallet to complete the transfer.</p>
+                            <p className="font-mono text-sm font-bold text-amber-400 tracking-wider">TRANSFER IN PROGRESS</p>
+                            <p className="font-mono text-xs text-amber-400/70 mt-1">Connect the destination wallet to complete the transfer.</p>
                         </div>
                         <button 
                             onClick={handleOpenWalletModal}
-                            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-semibold transition-all"
+                            className="sage-button !bg-amber-500 !border-amber-500"
                         >
-                            Connect Wallet
+                            CONNECT WALLET
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Program ID Configuration */}
+            {/* Program ID Configuration - Compact */}
             {!isTransferInProgress && (
-                <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-3">Program Configuration</h3>
-                    <div className="space-y-3">
-                        <div>
-                            <label className="block text-gray-400 text-sm mb-1">Player Profile Program ID</label>
+                <div className="sage-card p-4 mb-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                        <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold tracking-wider">CONFIG</span>
+                            <span className="font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider">Program ID:</span>
+                        </div>
+                        <div className="flex-1 flex flex-col sm:flex-row gap-2">
                             <input
                                 type="text"
                                 value={programId}
                                 onChange={(e) => setProgramId(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white font-mono text-sm"
+                                className="sage-input flex-1 py-2 text-[11px]"
                                 placeholder="Enter program ID..."
                             />
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                            <button
-                                onClick={fetchProfiles}
-                                disabled={loading}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
-                            >
-                                {loading ? 'Searching...' : 'Search Profiles'}
-                            </button>
-                            {KNOWN_PROGRAM_IDS.map((id) => (
+                            <div className="flex gap-2 flex-wrap">
                                 <button
-                                    key={id}
-                                    onClick={() => setProgramId(id)}
-                                    className="px-3 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm font-mono"
+                                    onClick={fetchProfiles}
+                                    disabled={loading}
+                                    className="sage-button py-2 px-4 disabled:opacity-50"
                                 >
-                                    {id.slice(0, 8)}...
+                                    {loading ? 'SEARCHING...' : 'SEARCH'}
                                 </button>
-                            ))}
-                        </div>
-                        {debugInfo && (
-                            <div className="bg-gray-900 border border-gray-600 rounded p-3">
-                                <p className="text-gray-300 text-sm font-mono">{debugInfo}</p>
+                                {KNOWN_PROGRAM_IDS.map((id) => (
+                                    <button
+                                        key={id}
+                                        onClick={() => setProgramId(id)}
+                                        className="sage-button-secondary px-3 py-2 font-mono text-[10px]"
+                                    >
+                                        {id.slice(0, 6)}...
+                                    </button>
+                                ))}
                             </div>
-                        )}
+                        </div>
                     </div>
+                    {debugInfo && (
+                        <div className="mt-2 bg-[var(--sa-black)] border border-[var(--sa-border)] px-3 py-2">
+                            <p className="font-mono text-[11px] text-[var(--sa-text-dim)]">{debugInfo}</p>
+                        </div>
+                    )}
                 </div>
             )}
 
             {!isTransferInProgress && profiles.length === 0 ? (
-                <p className="text-gray-400">No profiles found for this wallet.</p>
+                <div className="sage-card p-8 text-center">
+                    <p className="font-mono text-sm text-[var(--sa-text-dim)] tracking-wide">No profiles found for this wallet.</p>
+                </div>
             ) : !isTransferInProgress && (
-                <div className="grid gap-6">
-                    {profiles.map((profile) => (
-                        <div key={profile.key.toBase58()} className="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="text-xl font-semibold text-blue-400">Profile: <span className="text-sm font-mono text-gray-300">{profile.key.toBase58()}</span></h3>
-                                    <p className="text-sm text-gray-400 mt-1">Created: {new Date(profile.data.createdAt.toNumber() * 1000).toLocaleDateString()}</p>
-                                    <p className="text-sm text-gray-400">Auth Threshold: {profile.data.keyThreshold}</p>
+                <div className="grid gap-4">
+                    {profiles.map((profile, profileIndex) => (
+                        <div key={profile.key.toBase58()} className="sage-card overflow-hidden animate-fade-in-up" style={{ animationDelay: `${profileIndex * 0.1}s` }}>
+                            {/* Card Header - Compact with inline info */}
+                            <div className="bg-[var(--sa-black)] border-b border-[var(--sa-border)] px-4 py-2.5 flex items-center justify-between">
+                                <div className="flex items-center gap-4 flex-wrap">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold tracking-wider">
+                                            {String(profileIndex + 1).padStart(4, '0')}.
+                                        </span>
+                                        <span className="font-mono text-xs font-bold tracking-wider text-[var(--sa-text)]">PROFILE</span>
+                                    </div>
+                                    <div className="h-3 w-[1px] bg-[var(--sa-border)] hidden sm:block"></div>
+                                    <span className="font-mono text-xs text-cyan-400 break-all hidden sm:block font-semibold tracking-wide">{profile.key.toBase58()}</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="hidden md:flex items-center gap-4 text-[var(--sa-text-dim)]">
+                                        <span className="font-mono text-[10px]">Created: <span className="text-[var(--sa-text)]">{new Date(profile.data.createdAt.toNumber() * 1000).toLocaleDateString()}</span></span>
+                                        <span className="font-mono text-[10px]">Threshold: <span className="text-[var(--sa-text)]">{profile.data.keyThreshold}</span></span>
+                                    </div>
+                                    <div className="status-indicator active"></div>
                                 </div>
                             </div>
+                            
+                            {/* Mobile-only profile address */}
+                            <div className="sm:hidden px-4 py-2 bg-[var(--sa-dark)] border-b border-[var(--sa-border)]">
+                                <span className="font-mono text-xs text-cyan-400 break-all font-semibold tracking-wide">{profile.key.toBase58()}</span>
+                            </div>
 
+                            {/* Keys Table - Compact */}
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-gray-300">
-                                    <thead className="bg-gray-900 text-xs uppercase text-gray-400">
+                                <table className="w-full text-left">
+                                    <thead className="bg-[var(--sa-dark)]">
                                         <tr>
-                                            <th className="px-4 py-2 rounded-tl-lg">Key</th>
-                                            <th className="px-4 py-2">Permissions</th>
-                                            <th className="px-4 py-2">Expiry</th>
-                                            <th className="px-4 py-2 rounded-tr-lg">Actions</th>
+                                            <th className="px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[var(--sa-text-dim)] font-bold">Key</th>
+                                            <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-[var(--sa-text-dim)] font-bold">Permissions</th>
+                                            <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-[var(--sa-text-dim)] font-bold">Expiry</th>
+                                            <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-[var(--sa-text-dim)] font-bold text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-700">
+                                    <tbody className="divide-y divide-[var(--sa-border)]">
                                         {profile.profileKeys.map((pk, idx) => {
                                             const perms = ProfilePermissions.fromPermissions(pk.permissions);
                                             const isAuth = perms.auth;
                                             const isMe = wallet.publicKey && pk.key.equals(wallet.publicKey);
 
                                             return (
-                                                <tr key={`${profile.key.toBase58()}-${idx}`} className="hover:bg-gray-750 transition-colors">
-                                                    <td className="px-4 py-3 font-mono">
-                                                        {pk.key.toBase58()} 
-                                                        {isMe && <span className="ml-2 text-xs bg-green-900 text-green-200 px-2 py-0.5 rounded-full">You</span>}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {isAuth && <span className="bg-red-900/50 text-red-200 px-2 py-0.5 rounded text-xs border border-red-900">Auth</span>}
-                                                            {perms.addKeys && <span className="bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded text-xs border border-blue-900">Add Keys</span>}
-                                                            {perms.removeKeys && <span className="bg-yellow-900/50 text-yellow-200 px-2 py-0.5 rounded text-xs border border-yellow-900">Rm Keys</span>}
+                                                <tr key={`${profile.key.toBase58()}-${idx}`} className="hover:bg-[rgb(var(--sa-accent-rgb-space))]/5 transition-colors">
+                                                    <td className="px-4 py-2 font-mono text-[11px] text-[var(--sa-text)]">
+                                                        <div className="flex items-center gap-2">
+                                                            <span 
+                                                                className="cursor-help hover:text-cyan-400 transition-colors" 
+                                                                title={pk.key.toBase58()}
+                                                            >
+                                                                {pk.key.toBase58().slice(0, 4)}...{pk.key.toBase58().slice(-4)}
+                                                            </span>
+                                                            {isMe && (
+                                                                <span className="font-mono text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 border border-emerald-500/30 whitespace-nowrap">
+                                                                    YOU
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3 text-gray-400">
-                                                        {pk.expireTime.lt(new BN(0)) ? 'Never' : new Date(pk.expireTime.toNumber() * 1000).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        {isAuth && isMe ? (
-                                                            <button 
-                                                                onClick={() => openTransferModal(profile)}
-                                                                className="text-blue-400 hover:text-blue-300 text-xs uppercase font-bold tracking-wide disabled:opacity-50"
-                                                                disabled={processing}
-                                                            >
-                                                                Transfer Auth
-                                                            </button>
-                                                        ) : (
-                                                            !isAuth && (
+                                                    <td className="px-3 py-2">
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {isAuth && (
+                                                                <span className="font-mono text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 border border-red-500/30">AUTH</span>
+                                                                )}
+                                                                {perms.addKeys && (
+                                                                    <span className="font-mono text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 border border-blue-500/30">ADD</span>
+                                                                )}
+                                                                {perms.removeKeys && (
+                                                                    <span className="font-mono text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 border border-amber-500/30">RM</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 py-2 font-mono text-[11px] text-[var(--sa-text-dim)]">
+                                                            {pk.expireTime.lt(new BN(0)) ? 'Never' : new Date(pk.expireTime.toNumber() * 1000).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-right">
+                                                            {isAuth && isMe ? (
                                                                 <button 
-                                                                    onClick={() => handleDeleteKey(profile, idx)}
-                                                                    className="text-red-400 hover:text-red-300 text-xs uppercase font-bold tracking-wide disabled:opacity-50"
+                                                                    onClick={() => openTransferModal(profile)}
+                                                                    className="font-mono text-[10px] text-[var(--sa-accent)] hover:text-[var(--sa-accent-hover)] uppercase font-bold tracking-wider disabled:opacity-50 transition-colors"
                                                                     disabled={processing}
                                                                 >
-                                                                    Delete
+                                                                    TRANSFER
                                                                 </button>
-                                                            )
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                            ) : (
+                                                                !isAuth && (
+                                                                    <button 
+                                                                        onClick={() => handleDeleteKey(profile, idx)}
+                                                                        className="font-mono text-[10px] text-red-400 hover:text-red-300 uppercase font-bold tracking-wider disabled:opacity-50 transition-colors"
+                                                                        disabled={processing}
+                                                                    >
+                                                                        DELETE
+                                                                    </button>
+                                                                )
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                         </div>
                     ))}
                 </div>
             )}
 
+            {/* Transfer Modal */}
             {showTransferModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 p-6 rounded-xl max-w-lg w-full border border-gray-700 shadow-2xl">
+                    <div className="sage-card p-6 max-w-lg w-full border-[rgb(var(--sa-accent-rgb-space))]/30">
                         {renderTransferModalContent()}
                     </div>
                 </div>

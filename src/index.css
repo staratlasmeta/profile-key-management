@@ -2,13 +2,663 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Solana Wallet Adapter Styles */
+/* ============================================
+   SAGE EDITOR SUITE THEME
+   ============================================ */
+
+:root {
+    /* SA color palette */
+    --sa-black: #000000;
+    --sa-dark-bg: #0a0a0a;
+    --sa-border: #1a1a1a;
+    --sa-border-light: #2a2a2a;
+    --sa-text: #ffffff;
+    --sa-text-dim: #999999;
+    --sa-text-bright: #ffffff;
+    
+    /* Theme colors - Default is orange-red */
+    --sa-accent: #FF4500;
+    --sa-accent-hover: #FF5722;
+    --sa-accent-active: #E63900;
+    --sa-accent-rgb: 255, 69, 0; /* Comma-separated for rgba() usage */
+    --sa-accent-rgb-space: 255 69 0; /* Space-separated for Tailwind opacity modifiers */
+    
+    /* Typography */
+    --font-display: 'Audiowide', 'Orbitron', sans-serif;
+    --font-primary: 'Exo 2', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Orbitron', monospace;
+}
+
+/* Light theme variations */
+[data-theme="light"] {
+    --sa-black: #ffffff;
+    --sa-dark-bg: #f5f5f5;
+    --sa-border: #e0e0e0;
+    --sa-border-light: #d0d0d0;
+    --sa-text: #000000;
+    --sa-text-dim: #666666;
+    --sa-text-bright: #000000;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-primary);
+    background: var(--sa-black);
+    min-height: 100vh;
+    color: var(--sa-text);
+    overflow-x: hidden;
+    position: relative;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ============================================
+   GRID BACKGROUND
+   ============================================ */
+
+.grid-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.grid-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.grid-layer.dots {
+    background-image: radial-gradient(circle, var(--sa-accent) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: 0 0;
+    opacity: 0.15;
+    animation: drift 40s linear infinite;
+}
+
+.grid-layer.grid {
+    background-image: 
+        linear-gradient(var(--sa-border-light) 1px, transparent 1px),
+        linear-gradient(90deg, var(--sa-border-light) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: 0 0;
+    opacity: 0.2;
+}
+
+.grid-layer.accent {
+    background-image: 
+        linear-gradient(45deg, var(--sa-accent) 0.5px, transparent 0.5px),
+        linear-gradient(-45deg, var(--sa-accent) 0.5px, transparent 0.5px);
+    background-size: 100px 100px;
+    opacity: 0.03;
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes drift {
+    from { transform: translate(0, 0); }
+    to { transform: translate(50px, 50px); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.03; }
+    50% { opacity: 0.06; }
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
+
+.glow-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.glow {
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--sa-accent), transparent);
+    opacity: 0.04;
+    filter: blur(150px);
+    animation: float 20s ease-in-out infinite;
+}
+
+.glow:nth-child(1) {
+    top: -400px;
+    left: -400px;
+    animation-delay: 0s;
+}
+
+.glow:nth-child(2) {
+    bottom: -400px;
+    right: -400px;
+    animation-delay: 7s;
+}
+
+.glow:nth-child(3) {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: 14s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateX(0) translateY(0) scale(1);
+        opacity: 0.04;
+    }
+    33% {
+        transform: translateX(30px) translateY(-30px) scale(1.1);
+        opacity: 0.06;
+    }
+    66% {
+        transform: translateX(-30px) translateY(30px) scale(0.9);
+        opacity: 0.04;
+    }
+}
+
+/* ============================================
+   PARTICLES
+   ============================================ */
+
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--sa-accent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: float-up 10s linear infinite;
+}
+
+@keyframes float-up {
+    0% {
+        opacity: 0;
+        transform: translateY(100vh) scale(0);
+    }
+    10% {
+        opacity: 1;
+        transform: translateY(90vh) scale(1);
+    }
+    90% {
+        opacity: 1;
+        transform: translateY(10vh) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(0) scale(0);
+    }
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--sa-dark-bg);
+    border: 1px solid var(--sa-border);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--sa-border);
+    border: 1px solid var(--sa-accent);
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sa-accent);
+    box-shadow: 0 0 10px var(--sa-accent);
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+
+::selection {
+    background: var(--sa-accent);
+    color: var(--sa-black);
+}
+
+::-moz-selection {
+    background: var(--sa-accent);
+    color: var(--sa-black);
+}
+
+/* ============================================
+   FOCUS STYLES
+   ============================================ */
+
+*:focus-visible {
+    outline: 2px solid var(--sa-accent);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes cardFadeIn {
+    to { opacity: 1; }
+}
+
+@keyframes cardSlideIn {
+    from { transform: translateY(20px); }
+    to { transform: translateY(0); }
+}
+
+@keyframes glitch {
+    0% {
+        text-shadow: 
+            0.05em 0 0 rgba(255, 0, 0, 0.75),
+            -0.025em -0.05em 0 rgba(0, 255, 0, 0.75),
+            0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+    14% {
+        text-shadow: 
+            0.05em 0 0 rgba(255, 0, 0, 0.75),
+            -0.025em -0.05em 0 rgba(0, 255, 0, 0.75),
+            0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+    15% {
+        text-shadow: 
+            -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+    49% {
+        text-shadow: 
+            -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+    50% {
+        text-shadow: 
+            0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+            0.05em 0 0 rgba(0, 255, 0, 0.75),
+            0 -0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+    99% {
+        text-shadow: 
+            0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+            0.05em 0 0 rgba(0, 255, 0, 0.75),
+            0 -0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+    100% {
+        text-shadow: 
+            -0.025em 0 0 rgba(255, 0, 0, 0.75),
+            -0.025em -0.025em 0 rgba(0, 255, 0, 0.75),
+            -0.025em -0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+}
+
+@keyframes ping {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes scanline {
+    0%, 100% { opacity: 0.2; transform: scaleX(1); }
+    50% { opacity: 0.5; transform: scaleX(0.98); }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.font-display {
+    font-family: var(--font-display);
+}
+
+.font-primary {
+    font-family: var(--font-primary);
+}
+
+.font-mono-orbitron {
+    font-family: var(--font-mono);
+}
+
+.text-accent {
+    color: var(--sa-accent);
+}
+
+.bg-accent {
+    background-color: var(--sa-accent);
+}
+
+.border-accent {
+    border-color: var(--sa-accent);
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.animate-glitch:hover {
+    animation: glitch 0.5s ease;
+}
+
+/* ============================================
+   CARD STYLES
+   ============================================ */
+
+.sage-card {
+    background: var(--sa-dark-bg);
+    border: 1.6px solid var(--sa-border-light);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.sage-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    background: 
+        radial-gradient(circle at top left, rgba(var(--sa-accent-rgb), 0.2), transparent 40%),
+        radial-gradient(circle at bottom right, rgba(var(--sa-accent-rgb), 0.2), transparent 40%);
+}
+
+.sage-card:hover::before {
+    opacity: 1;
+}
+
+.sage-card:hover {
+    border-color: var(--sa-accent);
+    transform: translateY(-4px);
+    box-shadow: 
+        0 20px 40px rgba(var(--sa-accent-rgb), 0.2),
+        0 0 60px rgba(var(--sa-accent-rgb), 0.1);
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+
+.sage-button {
+    padding: 12px 24px;
+    background: var(--sa-accent);
+    border: 1px solid var(--sa-accent);
+    color: var(--sa-black);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.sage-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.3s ease;
+}
+
+.sage-button:hover::before {
+    left: 0;
+}
+
+.sage-button:hover {
+    background: var(--sa-accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(var(--sa-accent-rgb), 0.4);
+}
+
+.sage-button:active {
+    background: var(--sa-accent-active);
+    transform: translateY(0);
+}
+
+.sage-button-secondary {
+    background: transparent;
+    border: 1px solid var(--sa-border-light);
+    color: var(--sa-text);
+}
+
+.sage-button-secondary:hover {
+    border-color: var(--sa-accent);
+    background: rgba(var(--sa-accent-rgb), 0.1);
+    box-shadow: 0 0 20px rgba(var(--sa-accent-rgb), 0.2);
+}
+
+/* ============================================
+   INPUT STYLES
+   ============================================ */
+
+.sage-input {
+    width: 100%;
+    background: var(--sa-black);
+    border: 1px solid var(--sa-border);
+    padding: 12px 16px;
+    color: var(--sa-text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+}
+
+.sage-input:focus {
+    outline: none;
+    border-color: var(--sa-accent);
+    box-shadow: 0 0 20px rgba(var(--sa-accent-rgb), 0.2);
+}
+
+.sage-input::placeholder {
+    color: var(--sa-text-dim);
+    opacity: 0.5;
+}
+
+/* ============================================
+   STATUS INDICATORS
+   ============================================ */
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--sa-border);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.status-indicator.active {
+    background: var(--sa-accent);
+    box-shadow: 0 0 10px var(--sa-accent);
+}
+
+.status-indicator.active::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 1px solid var(--sa-accent);
+    opacity: 0;
+    animation: ping 2s ease-in-out infinite;
+}
+
+/* ============================================
+   SECTION HEADERS
+   ============================================ */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.section-number {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--sa-accent);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+.section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sa-text);
+}
+
+.section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--sa-border), transparent);
+}
+
+/* ============================================
+   SOLANA WALLET ADAPTER OVERRIDES
+   ============================================ */
+
 .wallet-adapter-button {
-    background-color: #4f46e5 !important;
-    height: 48px !important;
+    background: var(--sa-accent) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    border: 1px solid var(--sa-accent) !important;
+    transition: all 0.3s ease !important;
+    height: 44px !important;
 }
 
 .wallet-adapter-button:hover {
-    background-color: #4338ca !important;
+    background: var(--sa-accent-hover) !important;
+    box-shadow: 0 0 20px rgba(var(--sa-accent-rgb), 0.4) !important;
 }
 
+.wallet-adapter-button-trigger {
+    background: var(--sa-accent) !important;
+}
+
+.wallet-adapter-modal-wrapper {
+    background: var(--sa-dark-bg) !important;
+    border: 1px solid var(--sa-border) !important;
+}
+
+.wallet-adapter-modal-title {
+    font-family: var(--font-mono) !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}
+
+.wallet-adapter-modal-list li {
+    background: var(--sa-black) !important;
+    border: 1px solid var(--sa-border) !important;
+    transition: all 0.3s ease !important;
+}
+
+.wallet-adapter-modal-list li:hover {
+    border-color: var(--sa-accent) !important;
+    box-shadow: 0 0 20px rgba(var(--sa-accent-rgb), 0.2) !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .glow {
+        width: 400px;
+        height: 400px;
+    }
+    
+    .grid-layer.dots {
+        background-size: 30px 30px;
+    }
+    
+    .grid-layer.grid {
+        background-size: 30px 30px;
+    }
+}

@@ -4,33 +4,80 @@ import { RpcSettings } from './components/RpcSettings';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans selection:bg-blue-500 selection:text-white">
-      <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white">
-                <path fillRule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.5 9.75c0 5.992 3.043 11.294 7.923 14.07a.75.75 0 00.755 0C16.057 21.045 19.1 15.742 19.1 9.75c0-1.408-.255-2.766-.722-4.045a.75.75 0 00-.722-.515 11.208 11.208 0 01-7.877-3.08zM12 4.198a9.718 9.718 0 005.602 2.095c.32.935.504 1.927.538 2.957h-1.996a.75.75 0 000 1.5h1.984a11.232 11.232 0 01-1.31 4.5h-3.318a.75.75 0 000 1.5h2.696c-1.66 2.32-4.072 3.963-6.196 4.86C7.21 20.516 4 16.154 4 9.75c0-1.032.185-2.025.505-2.96h1.995a.75.75 0 000-1.5H4.514c.32-.932.697-1.829 1.117-2.697A9.72 9.72 0 0012 4.198z" clipRule="evenodd" />
+    <div className="min-h-screen text-[var(--sa-text)] font-primary relative z-10">
+      {/* Header */}
+      <header className="border-b border-[var(--sa-border)] bg-[var(--sa-black)]/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 h-14 sm:h-16 flex items-center justify-between">
+          {/* Logo Section */}
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+            {/* Logo Icon */}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 border border-[var(--sa-accent)] bg-[var(--sa-dark)] flex items-center justify-center relative overflow-hidden group shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--sa-accent-rgb-space))]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 text-[var(--sa-accent)] relative z-10">
+                <path fillRule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.5 9.75c0 5.992 3.043 11.294 7.923 14.07a.75.75 0 00.755 0C16.057 21.045 19.1 15.742 19.1 9.75c0-1.408-.255-2.766-.722-4.045a.75.75 0 00-.722-.515 11.208 11.208 0 01-7.877-3.08z" clipRule="evenodd" />
               </svg>
+              {/* Ping indicator */}
+              <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[var(--sa-accent)] animate-pulse"></div>
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              Profile Key Manager
-            </h1>
+            
+            {/* Title */}
+            <div className="flex flex-col min-w-0">
+              <h1 className="font-mono text-xs sm:text-sm md:text-base lg:text-lg font-bold tracking-wide sm:tracking-wider text-[var(--sa-text)] hover:text-[var(--sa-accent)] transition-colors cursor-default truncate">
+                PROFILE KEY MANAGER
+              </h1>
+              <span className="font-mono text-[8px] sm:text-[9px] md:text-[10px] text-[var(--sa-text-dim)] tracking-wide sm:tracking-[0.2em] uppercase hidden sm:block">
+                Star Atlas // Key Management
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          
+          {/* Controls */}
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0">
+            {/* System Status */}
+            <div className="hidden lg:flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-[var(--sa-dark)] border border-[var(--sa-border)]">
+              <div className="status-indicator active"></div>
+              <span className="font-mono text-[9px] sm:text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider whitespace-nowrap">System Online</span>
+            </div>
+            
             <RpcSettings />
-            <WalletMultiButton className="!bg-blue-600 hover:!bg-blue-700 !transition-colors !rounded-lg !px-6" />
+            <WalletMultiButton />
           </div>
         </div>
+        
+        {/* Accent line */}
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-[var(--sa-accent)] to-transparent opacity-50"></div>
       </header>
 
-      <main className="py-8">
+      {/* Main Content */}
+      <main className="py-8 relative">
         <ProfileManager />
       </main>
 
-      <footer className="border-t border-gray-800 mt-auto py-6">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} Profile Key Manager. All rights reserved.</p>
+      {/* Footer */}
+      <footer className="border-t border-[var(--sa-border)] mt-auto py-8 bg-[var(--sa-black)]/50 backdrop-blur-sm">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Left side */}
+            <div className="flex items-center gap-6">
+              <span className="font-mono text-[10px] text-[var(--sa-text-dim)] tracking-wider opacity-50 hover:opacity-100 transition-opacity">
+                SYSTEM /// ONLINE
+              </span>
+              <span className="font-mono text-[10px] text-[var(--sa-accent)] tracking-wider">
+                v1.0.0
+              </span>
+            </div>
+            
+            {/* Center */}
+            <p className="font-mono text-[11px] text-[var(--sa-text-dim)] tracking-wide">
+              &copy; {new Date().getFullYear()} Profile Key Manager • Star Atlas Tools
+            </p>
+            
+            {/* Right side */}
+            <div className="font-mono text-[10px] text-[var(--sa-text-dim)] tracking-wider">
+              <span className="opacity-50">Powered by</span>{' '}
+              <span className="text-[var(--sa-accent)]">Solana</span>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
@@ -38,4 +85,3 @@ function App() {
 }
 
 export default App
-
