@@ -6,9 +6,10 @@ import { AnchorProvider, BN } from '@staratlas/anchor';
 import {
     PlayerProfile,
     PlayerProfileProgram,
-    ProfilePermissions
+    ProfilePermissions,
+    PlayerName
 } from '@staratlas/player-profile';
-import { walletToAsyncSigner, readAllFromRPC } from '@staratlas/data-source';
+import { walletToAsyncSigner, readAllFromRPC, readFromRPCNullable } from '@staratlas/data-source';
 import { PLAYER_PROFILE_PROGRAM_ID, KNOWN_PROGRAM_IDS } from '../utils/constants';
 
 type TransferStep = 'idle' | 'enter_destination' | 'sign_current' | 'connect_destination' | 'sign_destination' | 'complete' | 'expired';
@@ -45,6 +46,7 @@ export const ProfileManager = () => {
     const wallet = useWallet();
     const { setVisible: setWalletModalVisible } = useWalletModal();
     const [profiles, setProfiles] = useState<PlayerProfile[]>([]);
+    const [profileNames, setProfileNames] = useState<Map<string, string | null>>(new Map());
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState<PlayerProfile | null>(null);
@@ -106,6 +108,25 @@ export const ProfileManager = () => {
         }
     }, [connection, wallet, programId]);
 
+    // Fetch the player name for a given profile
+    const fetchProfileName = useCallback(async (profileKey: PublicKey): Promise<string | null> => {
+        if (!program) return null;
+        
+        try {
+            const [nameKey] = PlayerName.findAddress(program, profileKey);
+            const nameAccount = await readFromRPCNullable(
+                connection,
+                program,
+                nameKey,
+                PlayerName
+            );
+            return nameAccount?.name || null;
+        } catch (e) {
+            console.error('Error fetching profile name:', e);
+            return null;
+        }
+    }, [connection, program]);
+
     const fetchProfiles = useCallback(async () => {
         // Don't fetch profiles if we're in the middle of a transfer
         if (isTransferInProgress) {
@@ -159,13 +180,23 @@ export const ProfileManager = () => {
             }
 
             setProfiles(myProfiles);
+
+            // Fetch names for all profiles in parallel
+            const namesMap = new Map<string, string | null>();
+            await Promise.all(
+                myProfiles.map(async (profile) => {
+                    const name = await fetchProfileName(profile.key);
+                    namesMap.set(profile.key.toBase58(), name);
+                })
+            );
+            setProfileNames(namesMap);
         } catch (e) {
             console.error("Error fetching profiles:", e);
             setDebugInfo(`Error: ${e instanceof Error ? e.message : String(e)}`);
         } finally {
             setLoading(false);
         }
-    }, [connection, wallet.publicKey, program, programId, isTransferInProgress]);
+    }, [connection, wallet.publicKey, program, programId, isTransferInProgress, fetchProfileName]);
 
     useEffect(() => {
         fetchProfiles();
@@ -1228,7 +1259,18 @@ export const ProfileManager = () => {
                                         <span className="font-mono text-xs font-bold tracking-wider text-[var(--sa-text)]">PROFILE</span>
                                     </div>
                                     <div className="h-3 w-[1px] bg-[var(--sa-border)] hidden sm:block"></div>
-                                    <span className="font-mono text-xs text-cyan-400 break-all hidden sm:block font-semibold tracking-wide">{profile.key.toBase58()}</span>
+                                    {/* Profile Username - Prominent Display */}
+                                    {profileNames.get(profile.key.toBase58()) ? (
+                                        <span className="font-display text-base sm:text-lg font-bold tracking-wide bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)]">
+                                            {profileNames.get(profile.key.toBase58())}
+                                        </span>
+                                    ) : (
+                                        <span className="font-mono text-xs italic text-[var(--sa-text-dim)]/60 px-2 py-0.5 border border-dashed border-[var(--sa-border)] bg-[var(--sa-dark)]/50">
+                                            « No Name Set »
+                                        </span>
+                                    )}
+                                    <div className="h-3 w-[1px] bg-[var(--sa-border)] hidden lg:block"></div>
+                                    <span className="font-mono text-xs text-cyan-400 break-all hidden lg:block font-semibold tracking-wide">{profile.key.toBase58()}</span>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="hidden md:flex items-center gap-4 text-[var(--sa-text-dim)]">
@@ -1239,8 +1281,8 @@ export const ProfileManager = () => {
                                 </div>
                             </div>
                             
-                            {/* Mobile-only profile address */}
-                            <div className="sm:hidden px-4 py-2 bg-[var(--sa-dark)] border-b border-[var(--sa-border)]">
+                            {/* Mobile-only profile info */}
+                            <div className="lg:hidden px-4 py-2 bg-[var(--sa-dark)] border-b border-[var(--sa-border)]">
                                 <span className="font-mono text-xs text-cyan-400 break-all font-semibold tracking-wide">{profile.key.toBase58()}</span>
                             </div>
 
