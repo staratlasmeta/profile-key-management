@@ -14,6 +14,8 @@ import { PLAYER_PROFILE_PROGRAM_ID, PROGRAM_ID_OPTIONS, CUSTOM_PROGRAM_ID_KEY } 
 
 type TransferStep = 'idle' | 'enter_destination' | 'sign_current' | 'connect_destination' | 'sign_destination' | 'complete' | 'expired';
 
+type FeePayer = 'source' | 'destination';
+
 interface TransferState {
     step: TransferStep;
     destinationPubkey: string;
@@ -24,6 +26,7 @@ interface TransferState {
     profileKeyThreshold: number;
     signedAt: number | null; // Timestamp when first signature was obtained
     error: string | null;
+    feePayer: FeePayer; // Who pays the transaction fee
 }
 
 const initialTransferState: TransferState = {
@@ -36,6 +39,7 @@ const initialTransferState: TransferState = {
     profileKeyThreshold: 1,
     signedAt: null,
     error: null,
+    feePayer: 'destination', // Default to destination wallet paying fees
 };
 
 // Blockhash validity window (90 seconds to be safe, actual is ~60-150 seconds)
@@ -66,6 +70,7 @@ export const ProfileManager = () => {
     const [transferState, setTransferState] = useState<TransferState>(initialTransferState);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
     const prevWalletRef = useRef<string | null>(null);
+    const [showFeePayerSettings, setShowFeePayerSettings] = useState(false);
 
     // Check if we're in the middle of a transfer (after first signature) or showing completion
     // This prevents automatic profile refresh until user acknowledges the result
@@ -286,6 +291,7 @@ export const ProfileManager = () => {
         setModalOpen(false);
         setSelectedProfile(null);
         setTransferState(initialTransferState);
+        setShowFeePayerSettings(false);
         // Note: Profile refresh happens automatically via useEffect when 
         // isTransferInProgress becomes false (step goes back to 'idle')
         // This ensures we get the fresh fetchProfiles with updated closure
@@ -396,11 +402,12 @@ export const ProfileManager = () => {
             const tx = new Transaction().add(...instructions);
             const { blockhash } = await connection.getLatestBlockhash();
             tx.recentBlockhash = blockhash;
-            // Destination wallet pays the transaction fee
-            tx.feePayer = newAuthPubkey;
+            // Set fee payer based on user selection
+            const feePayerPubkey = transferState.feePayer === 'destination' ? newAuthPubkey : wallet.publicKey;
+            tx.feePayer = feePayerPubkey;
 
             console.log("Transaction built, requesting signature from current wallet...");
-            console.log("Fee payer set to destination wallet:", newAuthPubkey.toBase58());
+            console.log(`Fee payer set to ${transferState.feePayer} wallet:`, feePayerPubkey.toBase58());
             
             // Sign with current wallet (partial sign)
             const signedTx = await wallet.signTransaction(tx);
@@ -596,7 +603,7 @@ export const ProfileManager = () => {
                                 {transferState.originalAuthPubkey}
                             </div>
                         </div>
-                        <div className="mb-6">
+                        <div className="mb-4">
                             <label className="block font-mono text-sm text-[var(--sa-accent)] uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
                                 <span className="w-2 h-2 bg-[var(--sa-accent)] animate-pulse"></span>
                                 Enter — New Auth Public Key (Destination)
@@ -609,6 +616,67 @@ export const ProfileManager = () => {
                                 placeholder="Enter destination Solana address..."
                             />
                         </div>
+                        
+                        {/* Fee Payer Settings - Collapsible */}
+                        <div className="mb-6">
+                            <button
+                                onClick={() => setShowFeePayerSettings(!showFeePayerSettings)}
+                                className="flex items-center gap-2 font-mono text-xs text-[var(--sa-text-dim)] hover:text-[var(--sa-text)] transition-colors uppercase tracking-wider"
+                            >
+                                <svg 
+                                    className={`w-3.5 h-3.5 transition-transform ${showFeePayerSettings ? 'rotate-90' : ''}`} 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>Transaction Settings</span>
+                                <svg 
+                                    className={`w-3 h-3 transition-transform ${showFeePayerSettings ? 'rotate-180' : ''}`} 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            
+                            {showFeePayerSettings && (
+                                <div className="mt-3 p-3 bg-[var(--sa-dark)] border border-[var(--sa-border)]">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="font-mono text-xs text-[var(--sa-text)] uppercase tracking-wider font-bold mb-1">Fee Payer</p>
+                                            <p className="font-mono text-xs text-[var(--sa-text-dim)]">Who pays the transaction fee</p>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-[var(--sa-black)] border border-[var(--sa-border)] p-0.5">
+                                            <button
+                                                onClick={() => setTransferState(prev => ({ ...prev, feePayer: 'source' }))}
+                                                className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all ${
+                                                    transferState.feePayer === 'source'
+                                                        ? 'bg-[var(--sa-accent)] text-[var(--sa-black)] font-bold'
+                                                        : 'text-[var(--sa-text-dim)] hover:text-[var(--sa-text)]'
+                                                }`}
+                                            >
+                                                Source
+                                            </button>
+                                            <button
+                                                onClick={() => setTransferState(prev => ({ ...prev, feePayer: 'destination' }))}
+                                                className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all ${
+                                                    transferState.feePayer === 'destination'
+                                                        ? 'bg-[var(--sa-accent)] text-[var(--sa-black)] font-bold'
+                                                        : 'text-[var(--sa-text-dim)] hover:text-[var(--sa-text)]'
+                                                }`}
+                                            >
+                                                Dest
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
                         {transferState.error && (
                             <div className="bg-red-500/10 border border-red-500/30 p-3 mb-4">
                                 <p className="font-mono text-sm text-red-400">{transferState.error}</p>
@@ -657,11 +725,49 @@ export const ProfileManager = () => {
                             </div>
                         </div>
                         
-                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 mb-6">
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 mb-4">
                             <p className="font-mono text-sm text-amber-300 tracking-wide leading-relaxed">
                                 <strong>→ ACTION REQUIRED:</strong> Sign with your <strong>current auth wallet</strong> to authorize the transfer.
                             </p>
                         </div>
+                        
+                        {/* Fee Payer Indicator - Editable before signing */}
+                        <div className="mb-4 p-2.5 bg-[var(--sa-dark)] border border-[var(--sa-border)] flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-3.5 h-3.5 text-[var(--sa-text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span className="font-mono text-xs text-[var(--sa-text-dim)] uppercase tracking-wider">Fee Payer:</span>
+                                <span className={`font-mono text-xs uppercase tracking-wider font-bold ${
+                                    transferState.feePayer === 'destination' ? 'text-[var(--sa-accent)]' : 'text-amber-400'
+                                }`}>
+                                    {transferState.feePayer === 'destination' ? 'Destination' : 'Source'} Wallet
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-[var(--sa-black)] border border-[var(--sa-border)] p-0.5">
+                                <button
+                                    onClick={() => setTransferState(prev => ({ ...prev, feePayer: 'source' }))}
+                                    className={`px-2 py-1 font-mono text-xs uppercase tracking-wider transition-all ${
+                                        transferState.feePayer === 'source'
+                                            ? 'bg-amber-500 text-[var(--sa-black)] font-bold'
+                                            : 'text-[var(--sa-text-dim)] hover:text-[var(--sa-text)]'
+                                    }`}
+                                >
+                                    Src
+                                </button>
+                                <button
+                                    onClick={() => setTransferState(prev => ({ ...prev, feePayer: 'destination' }))}
+                                    className={`px-2 py-1 font-mono text-xs uppercase tracking-wider transition-all ${
+                                        transferState.feePayer === 'destination'
+                                            ? 'bg-[var(--sa-accent)] text-[var(--sa-black)] font-bold'
+                                            : 'text-[var(--sa-text-dim)] hover:text-[var(--sa-text)]'
+                                    }`}
+                                >
+                                    Dest
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div className="space-y-3 mb-6">
                             <div>
                                 <label className="block font-mono text-sm text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-2">
@@ -767,6 +873,20 @@ export const ProfileManager = () => {
                                 </svg>
                                 <span className="font-mono text-sm font-bold tracking-wider">FIRST SIGNATURE COMPLETE</span>
                             </div>
+                        </div>
+
+                        {/* Fee Payer Indicator - Locked after signing */}
+                        <div className="mb-4 p-2.5 bg-[var(--sa-dark)] border border-[var(--sa-border)] flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5 text-[var(--sa-text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <span className="font-mono text-xs text-[var(--sa-text-dim)] uppercase tracking-wider">Fee Payer:</span>
+                            <span className={`font-mono text-xs uppercase tracking-wider font-bold ${
+                                transferState.feePayer === 'destination' ? 'text-[var(--sa-accent)]' : 'text-amber-400'
+                            }`}>
+                                {transferState.feePayer === 'destination' ? 'Destination' : 'Source'} Wallet
+                            </span>
+                            <span className="font-mono text-xs text-[var(--sa-text-dim)]/50 uppercase tracking-wider">(locked)</span>
                         </div>
 
                         {/* Time warning */}
@@ -937,7 +1057,7 @@ export const ProfileManager = () => {
                             </div>
                         )}
 
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 mb-6">
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 mb-4">
                             <div className="flex items-center gap-2 text-emerald-400">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -947,6 +1067,21 @@ export const ProfileManager = () => {
                                 </p>
                             </div>
                         </div>
+                        
+                        {/* Fee Payer Indicator - Locked after signing */}
+                        <div className="mb-4 p-2.5 bg-[var(--sa-dark)] border border-[var(--sa-border)] flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5 text-[var(--sa-text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <span className="font-mono text-xs text-[var(--sa-text-dim)] uppercase tracking-wider">Fee Payer:</span>
+                            <span className={`font-mono text-xs uppercase tracking-wider font-bold ${
+                                transferState.feePayer === 'destination' ? 'text-[var(--sa-accent)]' : 'text-amber-400'
+                            }`}>
+                                {transferState.feePayer === 'destination' ? 'Destination' : 'Source'} Wallet
+                            </span>
+                            <span className="font-mono text-xs text-[var(--sa-text-dim)]/50 uppercase tracking-wider">(locked)</span>
+                        </div>
+                        
                         <div className="space-y-3 mb-6">
                             <div>
                                 <label className="block font-mono text-sm text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-2">
