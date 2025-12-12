@@ -10,7 +10,7 @@ import {
     PlayerName
 } from '@staratlas/player-profile';
 import { walletToAsyncSigner, readAllFromRPC, readFromRPCNullable } from '@staratlas/data-source';
-import { PLAYER_PROFILE_PROGRAM_ID, KNOWN_PROGRAM_IDS } from '../utils/constants';
+import { PLAYER_PROFILE_PROGRAM_ID, PROGRAM_ID_OPTIONS, CUSTOM_PROGRAM_ID_KEY } from '../utils/constants';
 
 type TransferStep = 'idle' | 'enter_destination' | 'sign_current' | 'connect_destination' | 'sign_destination' | 'complete' | 'expired';
 
@@ -52,6 +52,14 @@ export const ProfileManager = () => {
     const [selectedProfile, setSelectedProfile] = useState<PlayerProfile | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [programId, setProgramId] = useState<string>(PLAYER_PROFILE_PROGRAM_ID.toBase58());
+    const [selectedNetwork, setSelectedNetwork] = useState<string>('mainnet');
+    const [customProgramId, setCustomProgramId] = useState<string>(() => {
+        // Load persisted custom program ID from localStorage
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(CUSTOM_PROGRAM_ID_KEY) || '';
+        }
+        return '';
+    });
     const [debugInfo, setDebugInfo] = useState<string>('');
     
     // Transfer auth state
@@ -1197,41 +1205,88 @@ export const ProfileManager = () => {
                 </div>
             )}
 
-            {/* Program ID Configuration - Compact */}
+            {/* Program ID Configuration - Network Selector */}
             {!isTransferInProgress && (
                 <div className="sage-card p-4 mb-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <div className="flex items-center gap-2 shrink-0">
-                            <span className="font-mono text-sm text-[var(--sa-accent)] font-bold tracking-wider">CONFIG</span>
-                            <span className="font-mono text-sm text-[var(--sa-text-dim)] uppercase tracking-wider">Program ID:</span>
+                            <span className="font-mono text-sm text-[var(--sa-accent)] font-bold tracking-wider">NETWORK</span>
                         </div>
-                        <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                        <div className="flex-1 flex flex-wrap gap-2">
+                            {PROGRAM_ID_OPTIONS.map((option) => {
+                                const isSelected = selectedNetwork === option.network;
+                                return (
+                                    <button
+                                        key={option.id}
+                                        onClick={() => {
+                                            setSelectedNetwork(option.network);
+                                            if (option.network !== 'custom') {
+                                                setProgramId(option.id);
+                                            } else {
+                                                // Use stored custom program ID if available
+                                                if (customProgramId) {
+                                                    setProgramId(customProgramId);
+                                                }
+                                            }
+                                        }}
+                                        className={`
+                                            relative px-4 py-2.5 font-mono text-sm uppercase tracking-wider font-bold
+                                            border transition-all duration-200
+                                            ${isSelected 
+                                                ? 'bg-[rgb(var(--sa-accent-rgb-space))]/20 border-[var(--sa-accent)] text-[var(--sa-accent)] ring-2 ring-[rgb(var(--sa-accent-rgb-space))]/30' 
+                                                : 'bg-[var(--sa-dark)] border-[var(--sa-border)] text-[var(--sa-text-dim)] hover:border-[var(--sa-border-light)] hover:text-[var(--sa-text)]'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {/* Selection indicator */}
+                                            <span className={`w-2 h-2 ${isSelected ? 'bg-[var(--sa-accent)]' : 'bg-[var(--sa-border)]'}`}></span>
+                                            <span>{option.label}</span>
+                                        </div>
+                                        {isSelected && (
+                                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--sa-accent)] animate-pulse"></span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <button
+                            onClick={fetchProfiles}
+                            disabled={loading}
+                            className="sage-button py-2 px-4 disabled:opacity-50 shrink-0"
+                        >
+                            {loading ? 'SEARCHING...' : 'SEARCH'}
+                        </button>
+                    </div>
+                    
+                    {/* Custom Program ID Input - Only shown when Custom is selected */}
+                    {selectedNetwork === 'custom' && (
+                        <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="font-mono text-xs text-[var(--sa-text-dim)] uppercase tracking-wider">Custom ID:</span>
+                            </div>
                             <input
                                 type="text"
-                                value={programId}
-                                onChange={(e) => setProgramId(e.target.value)}
-                                className="sage-input flex-1 py-2 text-[11px]"
-                                placeholder="Enter program ID..."
+                                value={customProgramId}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setCustomProgramId(value);
+                                    setProgramId(value);
+                                    // Persist to localStorage
+                                    if (typeof window !== 'undefined') {
+                                        localStorage.setItem(CUSTOM_PROGRAM_ID_KEY, value);
+                                    }
+                                }}
+                                className="sage-input flex-1 py-2 text-xs font-mono"
+                                placeholder="Enter custom program ID..."
                             />
-                            <div className="flex gap-2 flex-wrap">
-                                <button
-                                    onClick={fetchProfiles}
-                                    disabled={loading}
-                                    className="sage-button py-2 px-4 disabled:opacity-50"
-                                >
-                                    {loading ? 'SEARCHING...' : 'SEARCH'}
-                                </button>
-                                {KNOWN_PROGRAM_IDS.map((id) => (
-                                    <button
-                                        key={id}
-                                        onClick={() => setProgramId(id)}
-                                        className="sage-button-secondary px-3 py-2 font-mono text-sm"
-                                    >
-                                        {id.slice(0, 6)}...
-                                    </button>
-                                ))}
-                            </div>
                         </div>
+                    )}
+                    
+                    {/* Show selected Program ID */}
+                    <div className="mt-3 flex items-center gap-2 text-[var(--sa-text-dim)]">
+                        <span className="font-mono text-xs uppercase tracking-wider">Program ID:</span>
+                        <span className="font-mono text-xs text-[var(--sa-text)] break-all">{programId}</span>
                     </div>
                     {debugInfo && (
                         <div className="mt-2 bg-[var(--sa-black)] border border-[var(--sa-border)] px-3 py-2">
