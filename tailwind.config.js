@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'display': ['Audiowide', 'Orbitron', 'sans-serif'],
-        'primary': ['Exo 2', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        'mono': ['Orbitron', 'monospace'],
+        'display': ['Audiowide', 'Chakra Petch', 'sans-serif'],
+        'primary': ['Rajdhani', 'Chakra Petch', 'sans-serif'],
+        'mono': ['Chakra Petch', 'Orbitron', 'monospace'],
       },
       colors: {
         'sa': {

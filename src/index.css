@@ -13,7 +13,7 @@
     --sa-border: #1a1a1a;
     --sa-border-light: #2a2a2a;
     --sa-text: #ffffff;
-    --sa-text-dim: #999999;
+    --sa-text-dim: #b8b8b8;
     --sa-text-bright: #ffffff;
     
     /* Theme colors - Default is orange-red */
@@ -23,10 +23,10 @@
     --sa-accent-rgb: 255, 69, 0; /* Comma-separated for rgba() usage */
     --sa-accent-rgb-space: 255 69 0; /* Space-separated for Tailwind opacity modifiers */
     
-    /* Typography */
-    --font-display: 'Audiowide', 'Orbitron', sans-serif;
-    --font-primary: 'Exo 2', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'Orbitron', monospace;
+    /* Typography - Using Rajdhani for readability, Chakra Petch for headings */
+    --font-display: 'Audiowide', 'Chakra Petch', sans-serif;
+    --font-primary: 'Rajdhani', 'Chakra Petch', sans-serif;
+    --font-mono: 'Chakra Petch', 'Orbitron', monospace;
 }
 
 /* Light theme variations */
@@ -57,9 +57,10 @@ body {
     color: var(--sa-text);
     overflow-x: hidden;
     position: relative;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 1.6;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.65;
+    letter-spacing: 0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -454,14 +455,14 @@ body {
    ============================================ */
 
 .sage-button {
-    padding: 12px 24px;
+    padding: 14px 28px;
     background: var(--sa-accent);
     border: 1px solid var(--sa-accent);
     color: var(--sa-black);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -515,11 +516,11 @@ body {
     width: 100%;
     background: var(--sa-black);
     border: 1px solid var(--sa-border);
-    padding: 12px 16px;
+    padding: 14px 18px;
     color: var(--sa-text);
     font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.05em;
+    font-size: 15px;
+    letter-spacing: 0.03em;
     transition: all 0.3s ease;
 }
 
@@ -576,7 +577,7 @@ body {
 
 .section-number {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 14px;
     color: var(--sa-accent);
     font-weight: 700;
     letter-spacing: 0.1em;
@@ -584,9 +585,9 @@ body {
 
 .section-title {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 700;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--sa-text);
 }
@@ -604,13 +605,13 @@ body {
 .wallet-adapter-button {
     background: var(--sa-accent) !important;
     font-family: var(--font-mono) !important;
-    font-size: 11px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
-    letter-spacing: 0.1em !important;
+    letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
     border: 1px solid var(--sa-accent) !important;
     transition: all 0.3s ease !important;
-    height: 44px !important;
+    height: 48px !important;
 }
 
 .wallet-adapter-button:hover {

@@ -1,14 +1,53 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile Key Manager</title>
-    <script type="module" crossorigin src="/assets/index-D6EfIR0u.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DiE4Tuvi.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Audiowide&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-D8F_156w.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CXu70bD6.css">
   </head>
   <body>
+    <!-- Grid Background -->
+    <div class="grid-container">
+      <div class="grid-layer dots"></div>
+      <div class="grid-layer grid"></div>
+      <div class="grid-layer accent"></div>
+    </div>
+    
+    <!-- Glow Effects -->
+    <div class="glow-container">
+      <div class="glow"></div>
+      <div class="glow"></div>
+      <div class="glow"></div>
+    </div>
+    
+    <!-- Particles -->
+    <div class="particles" id="particles"></div>
+    
     <div id="root"></div>
+    
+    <!-- Particle Animation Script -->
+    <script>
+      // Create floating particles
+      function createParticles() {
+        const container = document.getElementById('particles');
+        if (!container) return;
+        
+        for (let i = 0; i < 30; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.animationDelay = Math.random() * 10 + 's';
+          particle.style.animationDuration = (8 + Math.random() * 6) + 's';
+          container.appendChild(particle);
+        }
+      }
+      
+      document.addEventListener('DOMContentLoaded', createParticles);
+    </script>
   </body>
 </html>
-

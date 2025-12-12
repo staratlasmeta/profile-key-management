@@ -28,7 +28,7 @@ export const RpcSettings = () => {
         <>
             <button 
                 onClick={handleOpen}
-                className={`flex items-center gap-2 px-3 py-2 border font-mono text-[10px] font-bold uppercase tracking-wider transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 border font-mono text-sm font-bold uppercase tracking-wider transition-all ${
                     isCustom 
                         ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50' 
                         : 'bg-[var(--sa-dark)] text-[var(--sa-text-dim)] border-[var(--sa-border)] hover:text-[var(--sa-text)] hover:border-[var(--sa-accent)]'
@@ -52,31 +52,31 @@ export const RpcSettings = () => {
                 >
                     <div className="sage-card p-6 w-full max-w-md border-[rgb(var(--sa-accent-rgb-space))]/30 max-h-[calc(100vh-180px)] overflow-y-auto">
                         <div className="flex items-center gap-2 mb-4">
-                            <span className="font-mono text-[10px] text-[var(--sa-accent)] font-bold tracking-wider">CONFIG</span>
-                            <h3 className="font-mono text-sm font-bold tracking-wider text-[var(--sa-text)]">RPC CONNECTION</h3>
+                            <span className="font-mono text-sm text-[var(--sa-accent)] font-bold tracking-wider">CONFIG</span>
+                            <h3 className="font-mono text-base font-bold tracking-wider text-[var(--sa-text)]">RPC CONNECTION</h3>
                         </div>
-                        <p className="font-mono text-[10px] text-[var(--sa-text-dim)] tracking-wide mb-4">
+                        <p className="font-mono text-sm text-[var(--sa-text-dim)] tracking-wide mb-4 leading-relaxed">
                             If experiencing rate limits (403/429), use a custom RPC endpoint (Helius, QuickNode, Triton).
                         </p>
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider font-bold mb-2">RPC Endpoint URL</label>
+                                <label className="block font-mono text-sm text-[var(--sa-text-dim)] uppercase tracking-wider font-bold mb-2">RPC Endpoint URL</label>
                                 <input 
                                     type="text" 
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
-                                    className="sage-input text-xs"
+                                    className="sage-input"
                                     placeholder="https://api.mainnet-beta.solana.com"
                                 />
                             </div>
 
                             {/* Current status */}
                             <div className="bg-[var(--sa-black)] border border-[var(--sa-border)] p-3">
-                                <label className="block font-mono text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider mb-2">Current Status</label>
+                                <label className="block font-mono text-sm text-[var(--sa-text-dim)] uppercase tracking-wider mb-2">Current Status</label>
                                 <div className="flex items-center gap-2">
                                     <div className={`status-indicator ${isCustom ? 'active' : ''}`} style={{ background: isCustom ? '#f59e0b' : undefined }}></div>
-                                    <span className={`font-mono text-xs ${isCustom ? 'text-amber-400' : 'text-[var(--sa-text-dim)]'}`}>
+                                    <span className={`font-mono text-sm ${isCustom ? 'text-amber-400' : 'text-[var(--sa-text-dim)]'}`}>
                                         {isCustom ? 'Custom RPC Active' : 'Default RPC'}
                                     </span>
                                 </div>

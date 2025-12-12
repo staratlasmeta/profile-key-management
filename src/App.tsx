@@ -22,10 +22,10 @@ function App() {
             
             {/* Title */}
             <div className="flex flex-col min-w-0">
-              <h1 className="font-mono text-xs sm:text-sm md:text-base lg:text-lg font-bold tracking-wide sm:tracking-wider text-[var(--sa-text)] hover:text-[var(--sa-accent)] transition-colors cursor-default truncate">
+              <h1 className="font-mono text-sm sm:text-base md:text-lg lg:text-xl font-bold tracking-wide sm:tracking-wider text-[var(--sa-text)] hover:text-[var(--sa-accent)] transition-colors cursor-default truncate">
                 PROFILE KEY MANAGER
               </h1>
-              <span className="font-mono text-[8px] sm:text-[9px] md:text-[10px] text-[var(--sa-text-dim)] tracking-wide sm:tracking-[0.2em] uppercase hidden sm:block">
+              <span className="font-mono text-[10px] sm:text-xs md:text-sm text-[var(--sa-text-dim)] tracking-wide sm:tracking-[0.15em] uppercase hidden sm:block">
                 Star Atlas // Key Management
               </span>
             </div>
@@ -34,9 +34,9 @@ function App() {
           {/* Controls */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0">
             {/* System Status */}
-            <div className="hidden lg:flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-[var(--sa-dark)] border border-[var(--sa-border)]">
+            <div className="hidden lg:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[var(--sa-dark)] border border-[var(--sa-border)]">
               <div className="status-indicator active"></div>
-              <span className="font-mono text-[9px] sm:text-[10px] text-[var(--sa-text-dim)] uppercase tracking-wider whitespace-nowrap">System Online</span>
+              <span className="font-mono text-xs sm:text-sm text-[var(--sa-text-dim)] uppercase tracking-wider whitespace-nowrap">System Online</span>
             </div>
             
             <RpcSettings />
@@ -59,23 +59,23 @@ function App() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Left side */}
             <div className="flex items-center gap-6">
-              <span className="font-mono text-[10px] text-[var(--sa-text-dim)] tracking-wider opacity-50 hover:opacity-100 transition-opacity">
+              <span className="font-mono text-sm text-[var(--sa-text-dim)] tracking-wider opacity-60 hover:opacity-100 transition-opacity">
                 SYSTEM /// ONLINE
               </span>
-              <span className="font-mono text-[10px] text-[var(--sa-accent)] tracking-wider">
+              <span className="font-mono text-sm text-[var(--sa-accent)] tracking-wider font-semibold">
                 v1.0.0
               </span>
             </div>
             
             {/* Center */}
-            <p className="font-mono text-[11px] text-[var(--sa-text-dim)] tracking-wide">
+            <p className="font-mono text-sm text-[var(--sa-text-dim)] tracking-wide">
               &copy; {new Date().getFullYear()} Profile Key Manager • Star Atlas Tools
             </p>
             
             {/* Right side */}
-            <div className="font-mono text-[10px] text-[var(--sa-text-dim)] tracking-wider">
-              <span className="opacity-50">Powered by</span>{' '}
-              <span className="text-[var(--sa-accent)]">Solana</span>
+            <div className="font-mono text-sm text-[var(--sa-text-dim)] tracking-wider">
+              <span className="opacity-60">Powered by</span>{' '}
+              <span className="text-[var(--sa-accent)] font-semibold">Solana</span>
             </div>
           </div>
         </div>
