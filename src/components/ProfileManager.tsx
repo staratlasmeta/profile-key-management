@@ -1316,12 +1316,12 @@ export const ProfileManager = () => {
                                     <div className="h-3 w-[1px] bg-[var(--sa-border)] hidden sm:block"></div>
                                     {/* Profile Username - Prominent Display */}
                                     {profileNames.get(profile.key.toBase58()) ? (
-                                        <span className="font-display text-base sm:text-lg font-bold tracking-wide bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)]">
+                                        <span className="font-mono text-base sm:text-lg font-bold tracking-wider text-[var(--sa-accent)] uppercase">
                                             {profileNames.get(profile.key.toBase58())}
                                         </span>
                                     ) : (
-                                        <span className="font-mono text-sm italic text-[var(--sa-text-dim)]/60 px-2 py-0.5 border border-dashed border-[var(--sa-border)] bg-[var(--sa-dark)]/50">
-                                            « No Name Set »
+                                        <span className="font-mono text-sm text-[var(--sa-text-dim)]/50 tracking-wide">
+                                            NO NAME
                                         </span>
                                     )}
                                     <div className="h-3 w-[1px] bg-[var(--sa-border)] hidden lg:block"></div>
