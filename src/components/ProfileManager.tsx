@@ -362,11 +362,30 @@ export const ProfileManager = () => {
                 throw new Error("Current wallet is not an auth key");
             }
 
+            // Build full permissions for the new key (AUTH + ADD + RM)
+            // This ensures the new key always has complete permissions, even if the old key was missing some
+            // Permission bits: auth=bit0, addKeys=bit1, removeKeys=bit2
+            const fullPermissionsRaw = [
+                0b00000111, // byte 0: auth (1) + addKeys (2) + removeKeys (4) = 7
+                0, 0, 0, 0, 0, 0, 0 // bytes 1-7: no additional permissions needed
+            ] as const;
+            
+            // Create a permissions wrapper that implements the PermissionType interface
+            // The SDK calls getPermissions() internally, so we need to provide this method
+            const fullPermissionsWrapper = {
+                getPermissions: () => fullPermissionsRaw,
+                or: function() { return this; },
+                and: function() { return this; },
+                eq: () => true,
+                contains: () => true,
+            };
+
             console.log("=== Building Transfer Auth Transaction ===");
             console.log("Profile:", selectedProfile.key.toBase58());
             console.log("Current auth key:", wallet.publicKey.toBase58());
             console.log("New auth key:", newAuthPubkey.toBase58());
             console.log("Current key index:", currentKeyIndex);
+            console.log("New key will have full permissions: AUTH + ADD + RM");
 
             const ixReturnFn = PlayerProfile.adjustAuth(
                 program as any,
@@ -380,7 +399,7 @@ export const ProfileManager = () => {
                         key: newAuthPubkey,
                         expireTime: null,
                         scope: new PublicKey(programId),
-                        permissions: ProfilePermissions.auth()
+                        permissions: fullPermissionsWrapper as any // Always grant full permissions (AUTH + ADD + RM)
                     })
                 ],
                 [currentKeyIndex, currentKeyIndex + 1],
