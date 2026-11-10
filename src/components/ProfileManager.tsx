@@ -397,7 +397,12 @@ export const ProfileManager = () => {
                 [
                     (cont) => cont({
                         key: newAuthPubkey,
-                        expireTime: null,
+                        // The Player Profile program's adjust_auth rejects an auth key unless its
+                        // expire_time is exactly 0 ("Auth keys cannot expire", adjust_auth.rs:104).
+                        // `null` would be sent by the SDK as -1, the value create_profile expects
+                        // instead. Auth keys are never checked for expiry (validate_key returns
+                        // early for them), so 0 is safe.
+                        expireTime: new BN(0),
                         scope: new PublicKey(programId),
                         permissions: fullPermissionsWrapper as any // Always grant full permissions (AUTH + ADD + RM)
                     })
